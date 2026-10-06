@@ -24,6 +24,8 @@ model User {
 
   properties   Property[]
   applications Application[]
+  rooms        Room[] @relation("TenantRoom")
+  invoices     Invoice[]
 
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -47,10 +49,14 @@ model Room {
   description String?
   propertyId  String
   property    Property @relation(fields: [propertyId], references: [id])
+  
+  seats       Int      @default(2)
+  
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   applications Application[]
+  tenants     User[]    @relation("TenantRoom")
 }
 
 enum ApplicationStatus {
@@ -69,4 +75,15 @@ model Application {
   message   String?
   createdAt DateTime     @default(now())
   updatedAt DateTime     @updatedAt
+}
+
+model Invoice {
+  id        String   @id @default(uuid())
+  tenantId  String
+  tenant    User     @relation(fields: [tenantId], references: [id])
+  amount    Float
+  dueDate   DateTime
+  status    String   @default("PENDING")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
