@@ -11,6 +11,7 @@ export const createPropertySchema = z.object({
 export const listPropertiesSchema = z.object({
   query: z.object({
     providerId: z.string().optional(),
+    address: z.string().optional(),
   }),
 });
 

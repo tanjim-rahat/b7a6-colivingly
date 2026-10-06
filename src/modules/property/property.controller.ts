@@ -1,6 +1,9 @@
 import { Response } from "express";
 import { AuthRequest } from "../../middleware/auth.middleware.js";
-import { createPropertySchema, listPropertiesSchema } from "./property.validations.js";
+import {
+  createPropertySchema,
+  listPropertiesSchema,
+} from "./property.validations.js";
 import { createProperty, listProperties } from "./property.services.js";
 
 type ZodError = {
@@ -80,4 +83,3 @@ export const listPropertiesController = async (
     });
   }
 };
-

@@ -15,12 +15,19 @@ export const createProperty = async (input: CreatePropertyInput) => {
 
 export interface ListPropertiesInput {
   providerId?: string;
+  address?: string;
 }
 
 export const listProperties = async (input: ListPropertiesInput) => {
-  const where = input.providerId
-    ? { ownerId: input.providerId }
-    : {};
+  const where: any = {};
+
+  if (input.providerId) {
+    where.ownerId = input.providerId;
+  }
+
+  if (input.address) {
+    where.address = { contains: input.address, mode: "insensitive" };
+  }
 
   return prisma.property.findMany({
     where,
