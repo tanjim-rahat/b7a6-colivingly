@@ -23,3 +23,24 @@ export const createApplication = async (input: CreateApplicationInput) => {
     },
   });
 };
+
+export const listApplicationsByProvider = async (providerId: string) => {
+  return prisma.application.findMany({
+    where: {
+      room: {
+        property: {
+          ownerId: providerId,
+        },
+      },
+    },
+    include: {
+      tenant: { select: { id: true, email: true, name: true } },
+      room: {
+        include: {
+          property: true,
+        },
+      },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+};
