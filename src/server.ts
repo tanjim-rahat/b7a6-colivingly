@@ -1,7 +1,11 @@
 import Express, { Request, Response } from "express";
 import router from "./router.js";
+import cookieParser from "cookie-parser";
 
 const app = Express();
+
+// Parse cookies
+app.use(cookieParser());
 
 app.use("/api", router);
 
