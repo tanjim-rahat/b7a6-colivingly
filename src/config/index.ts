@@ -12,6 +12,9 @@ type Config = {
   COOKIE_MAX_AGE: number;
   COOKIE_HTTP_ONLY: boolean;
   COOKIE_SECURE: boolean;
+  STRIPE_SECRET_KEY: string | undefined;
+  STRIPE_WEBHOOK_SECRET: string | undefined;
+  SERVER_URL: string;
 };
 
 const config: Config = {
@@ -24,6 +27,9 @@ const config: Config = {
   COOKIE_MAX_AGE: parseInt(process.env.COOKIE_MAX_AGE ?? "900000"), // 15 minutes in ms
   COOKIE_HTTP_ONLY: process.env.COOKIE_HTTP_ONLY === "true",
   COOKIE_SECURE: process.env.COOKIE_SECURE === "true",
+  STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY,
+  STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET,
+  SERVER_URL: process.env.SERVER_URL ?? "http://localhost:3000",
 };
 
 export default config;
