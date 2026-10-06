@@ -5,6 +5,7 @@ export const createRoomSchema = z.object({
     name: z.string().min(1, "Name is required"),
     description: z.string().optional(),
     propertyId: z.string().min(1, "Property ID is required"),
+    rentAmount: z.number().min(0, "Rent amount must be non-negative").default(0),
   }),
 });
 

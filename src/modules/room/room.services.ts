@@ -4,6 +4,7 @@ export interface CreateRoomInput {
   name: string;
   description?: string;
   propertyId: string;
+  rentAmount: number;
 }
 
 export const createRoom = async (input: CreateRoomInput) => {

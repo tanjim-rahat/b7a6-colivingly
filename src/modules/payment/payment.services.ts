@@ -18,7 +18,7 @@ export const createCheckoutSession = async ({
 }: CreateCheckoutSessionInput) => {
   const invoice = await prisma.invoice.findUnique({
     where: { id: invoiceId },
-    include: { tenant: true },
+    include: { tenant: true, application: { include: { room: true } } },
   });
 
   if (!invoice) throw new Error("Invoice not found");
@@ -84,6 +84,7 @@ export const updateInvoiceFromWebhook = async (
 ) => {
   const invoice = await prisma.invoice.findFirst({
     where: { stripePaymentIntentId: paymentIntentId },
+    include: { application: { include: { room: true } } },
   });
 
   if (invoice) {
@@ -94,14 +95,39 @@ export const updateInvoiceFromWebhook = async (
           ? PaymentStatus.FAILED
           : invoice.status;
 
-    return prisma.invoice.update({
-      where: { id: invoice.id },
-      data: {
-        status: prismaStatus,
-        ...(status === "succeeded"
-          ? { stripePaymentIntentId: paymentIntentId }
-          : {}),
-      },
+    const updateData: any = {
+      status: prismaStatus,
+      ...(status === "succeeded"
+        ? { stripePaymentIntentId: paymentIntentId }
+        : {}),
+    };
+
+    if (status === "succeeded" && invoice.applicationId) {
+      updateData._addTenantToRoom = true;
+    }
+
+    return prisma.$transaction(async (tx) => {
+      const updated = await tx.invoice.update({
+        where: { id: invoice.id },
+        data: updateData,
+        include: { application: { include: { room: true } } },
+      });
+
+      if (updateData._addTenantToRoom && updated.application) {
+        const room = updated.application.room;
+        const existingMember = await tx.room.findFirst({
+          where: { id: room.id, tenants: { some: { id: invoice.tenantId } } },
+        });
+
+        if (!existingMember) {
+          await tx.room.update({
+            where: { id: room.id },
+            data: { tenants: { connect: { id: invoice.tenantId } } },
+          });
+        }
+      }
+
+      return updated;
     });
   }
 
@@ -112,6 +138,7 @@ export const updateInvoiceFromWebhook = async (
 
   const targetInvoice = await prisma.invoice.findUnique({
     where: { id: invoiceId },
+    include: { application: { include: { room: true } } },
   });
   if (!targetInvoice) return null;
 
@@ -122,13 +149,38 @@ export const updateInvoiceFromWebhook = async (
         ? PaymentStatus.FAILED
         : targetInvoice.status;
 
-  return prisma.invoice.update({
-    where: { id: invoiceId },
-    data: {
-      status: prismaStatus,
-      ...(status === "succeeded"
-        ? { stripePaymentIntentId: paymentIntentId }
-        : {}),
-    },
+  const updateData: any = {
+    status: prismaStatus,
+    ...(status === "succeeded"
+      ? { stripePaymentIntentId: paymentIntentId }
+      : {}),
+  };
+
+  if (status === "succeeded" && targetInvoice.applicationId) {
+    updateData._addTenantToRoom = true;
+  }
+
+  return prisma.$transaction(async (tx) => {
+    const updated = await tx.invoice.update({
+      where: { id: invoiceId },
+      data: updateData,
+      include: { application: { include: { room: true } } },
+    });
+
+    if (updateData._addTenantToRoom && updated.application) {
+      const room = updated.application.room;
+      const existingMember = await tx.room.findFirst({
+        where: { id: room.id, tenants: { some: { id: updated.tenantId } } },
+      });
+
+      if (!existingMember) {
+        await tx.room.update({
+          where: { id: room.id },
+          data: { tenants: { connect: { id: updated.tenantId } } },
+        });
+      }
+    }
+
+    return updated;
   });
 };

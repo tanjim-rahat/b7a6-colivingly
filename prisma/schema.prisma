@@ -56,9 +56,10 @@ model Room {
   description String?
   propertyId  String
   property    Property @relation(fields: [propertyId], references: [id])
-  
+
   seats       Int      @default(2)
-  
+  rentAmount  Float    @default(100.0)
+
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -80,6 +81,8 @@ model Application {
   room      Room         @relation(fields: [roomId], references: [id])
   status    ApplicationStatus @default(PENDING)
   message   String?
+  invoice   Invoice?
+
   createdAt DateTime     @default(now())
   updatedAt DateTime     @updatedAt
 }
@@ -88,6 +91,8 @@ model Invoice {
   id                    String        @id @default(uuid())
   tenantId              String
   tenant                User          @relation(fields: [tenantId], references: [id])
+  applicationId         String?      @unique
+  application           Application?  @relation(fields: [applicationId], references: [id])
   amount                Float
   dueDate               DateTime
   status                PaymentStatus @default(PENDING)
