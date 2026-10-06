@@ -19,6 +19,20 @@ router.get(
   applicationController.listApplicationsByProviderController,
 );
 
+router.get(
+  "/tenant",
+  authenticate,
+  authorize(Role.TENANT),
+  applicationController.listApplicationsByTenantController,
+);
+
+router.get(
+  "/:id",
+  authenticate,
+  authorize(Role.PROVIDER, Role.TENANT),
+  applicationController.getApplicationController,
+);
+
 router.patch(
   "/:id",
   authenticate,

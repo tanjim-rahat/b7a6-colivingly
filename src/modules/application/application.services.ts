@@ -45,6 +45,37 @@ export const listApplicationsByProvider = async (providerId: string) => {
   });
 };
 
+export const listApplicationsByTenant = async (tenantId: string) => {
+  return prisma.application.findMany({
+    where: { tenantId },
+    include: {
+      room: { include: { property: true } },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+};
+
+export const getApplication = async (applicationId: string, userId: string, userRole: string) => {
+  const application = await prisma.application.findFirst({
+    where: {
+      id: applicationId,
+      ...(userRole === "TENANT"
+        ? { tenantId: userId }
+        : { room: { property: { ownerId: userId } } }),
+    },
+    include: {
+      tenant: { select: { id: true, email: true, name: true } },
+      room: { include: { property: true } },
+    },
+  });
+
+  if (!application) {
+    throw new Error("Application not found or you do not have access to it.");
+  }
+
+  return application;
+};
+
 export const updateApplicationStatus = async (
   applicationId: string,
   providerId: string,

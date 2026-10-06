@@ -1,8 +1,17 @@
 import { Response } from "express";
 import { AuthRequest } from "../../middleware/auth.middleware.js";
 import { prisma } from "../../lib/prisma.js";
-import { createApplicationSchema, updateApplicationSchema } from "./application.validations.js";
-import { createApplication, listApplicationsByProvider, updateApplicationStatus } from "./application.services.js";
+import {
+  createApplicationSchema,
+  updateApplicationSchema,
+} from "./application.validations.js";
+import {
+  createApplication,
+  getApplication,
+  listApplicationsByProvider,
+  listApplicationsByTenant,
+  updateApplicationStatus,
+} from "./application.services.js";
 
 type ZodError = {
   issues?: Array<{ path?: (string | number)[]; message: string }>;
@@ -19,7 +28,10 @@ const handleZodError = (res: Response, err: ZodError) => {
   });
 };
 
-export const createApplicationController = async (req: AuthRequest, res: Response) => {
+export const createApplicationController = async (
+  req: AuthRequest,
+  res: Response,
+) => {
   try {
     const { body: input } = createApplicationSchema.parse({ body: req.body });
 
@@ -53,6 +65,56 @@ export const createApplicationController = async (req: AuthRequest, res: Respons
     }
 
     console.error("Error creating application:", error);
+    res.status(500).json({
+      success: false,
+      error: "Internal server error",
+      message: "An unexpected error occurred.",
+    });
+  }
+};
+
+export const getApplicationController = async (
+  req: AuthRequest,
+  res: Response,
+) => {
+  try {
+    const application = await getApplication(
+      req.params.id as string,
+      req.user!.userId,
+      req.user!.role,
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "Application retrieved successfully",
+      data: { application },
+    });
+  } catch (error) {
+    const message = (error as Error).message ?? "An unexpected error occurred.";
+    const status = message.includes("not found") ? 404 : 500;
+
+    res.status(status).json({
+      success: false,
+      error: "Failed to get application",
+      message,
+    });
+  }
+};
+
+export const listApplicationsByTenantController = async (
+  req: AuthRequest,
+  res: Response,
+) => {
+  try {
+    const applications = await listApplicationsByTenant(req.user!.userId);
+
+    res.status(200).json({
+      success: true,
+      message: "Applications retrieved successfully",
+      data: { applications },
+    });
+  } catch (error) {
+    console.error("Error listing applications:", error);
     res.status(500).json({
       success: false,
       error: "Internal server error",
@@ -111,10 +173,8 @@ export const updateApplicationStatusController = async (
       return;
     }
 
-    const message =
-      (error as Error).message ?? "An unexpected error occurred.";
-    const status =
-      message.includes("not found") ? 404 : 500;
+    const message = (error as Error).message ?? "An unexpected error occurred.";
+    const status = message.includes("not found") ? 404 : 500;
 
     res.status(status).json({
       success: false,
