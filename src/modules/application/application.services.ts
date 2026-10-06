@@ -44,3 +44,30 @@ export const listApplicationsByProvider = async (providerId: string) => {
     orderBy: { createdAt: "desc" },
   });
 };
+
+export const updateApplicationStatus = async (
+  applicationId: string,
+  providerId: string,
+  status: "APPROVED" | "REJECTED",
+  message?: string,
+) => {
+  const application = await prisma.application.findFirst({
+    where: {
+      id: applicationId,
+      room: { property: { ownerId: providerId } },
+    },
+  });
+
+  if (!application) {
+    throw new Error("Application not found or you do not have access to it.");
+  }
+
+  return prisma.application.update({
+    where: { id: applicationId },
+    data: { status, message },
+    include: {
+      tenant: { select: { id: true, email: true, name: true } },
+      room: { include: { property: true } },
+    },
+  });
+};

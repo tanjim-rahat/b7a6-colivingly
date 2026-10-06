@@ -6,3 +6,13 @@ export const createApplicationSchema = z.object({
     message: z.string().optional(),
   }),
 });
+
+export const updateApplicationSchema = z.object({
+  params: z.object({
+    id: z.string().min(1, "Application ID is required"),
+  }),
+  body: z.object({
+    status: z.enum(["APPROVED", "REJECTED"]),
+    message: z.string().optional(),
+  }),
+});

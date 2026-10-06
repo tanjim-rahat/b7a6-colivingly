@@ -1,8 +1,8 @@
 import { Response } from "express";
 import { AuthRequest } from "../../middleware/auth.middleware.js";
 import { prisma } from "../../lib/prisma.js";
-import { createApplicationSchema } from "./application.validations.js";
-import { createApplication, listApplicationsByProvider } from "./application.services.js";
+import { createApplicationSchema, updateApplicationSchema } from "./application.validations.js";
+import { createApplication, listApplicationsByProvider, updateApplicationStatus } from "./application.services.js";
 
 type ZodError = {
   issues?: Array<{ path?: (string | number)[]; message: string }>;
@@ -79,6 +79,47 @@ export const listApplicationsByProviderController = async (
       success: false,
       error: "Internal server error",
       message: "An unexpected error occurred.",
+    });
+  }
+};
+
+export const updateApplicationStatusController = async (
+  req: AuthRequest,
+  res: Response,
+) => {
+  try {
+    const { params, body: input } = updateApplicationSchema.parse({
+      params: req.params,
+      body: req.body,
+    });
+
+    const application = await updateApplicationStatus(
+      params.id,
+      req.user!.userId,
+      input.status,
+      input.message,
+    );
+
+    res.status(200).json({
+      success: true,
+      message: `Application ${input.status.toLowerCase()} successfully`,
+      data: { application },
+    });
+  } catch (error) {
+    if ((error as ZodError)?.issues) {
+      handleZodError(res, error as ZodError);
+      return;
+    }
+
+    const message =
+      (error as Error).message ?? "An unexpected error occurred.";
+    const status =
+      message.includes("not found") ? 404 : 500;
+
+    res.status(status).json({
+      success: false,
+      error: "Failed to update application",
+      message,
     });
   }
 };

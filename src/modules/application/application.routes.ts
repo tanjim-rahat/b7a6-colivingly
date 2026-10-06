@@ -19,4 +19,11 @@ router.get(
   applicationController.listApplicationsByProviderController,
 );
 
+router.patch(
+  "/:id",
+  authenticate,
+  authorize(Role.PROVIDER),
+  applicationController.updateApplicationStatusController,
+);
+
 export default router;
