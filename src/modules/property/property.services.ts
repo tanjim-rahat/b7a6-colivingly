@@ -12,3 +12,18 @@ export const createProperty = async (input: CreatePropertyInput) => {
     data: input,
   });
 };
+
+export interface ListPropertiesInput {
+  providerId?: string;
+}
+
+export const listProperties = async (input: ListPropertiesInput) => {
+  const where = input.providerId
+    ? { ownerId: input.providerId }
+    : {};
+
+  return prisma.property.findMany({
+    where,
+  });
+};
+

@@ -13,5 +13,6 @@ router.post(
   propertyController.createPropertyController,
 );
 
-export default router;
+router.get("/", authenticate, propertyController.listPropertiesController);
 
+export default router;

@@ -7,3 +7,10 @@ export const createPropertySchema = z.object({
     description: z.string().optional(),
   }),
 });
+
+export const listPropertiesSchema = z.object({
+  query: z.object({
+    providerId: z.string().optional(),
+  }),
+});
+
