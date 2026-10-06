@@ -31,6 +31,8 @@ export const listProperties = async (input: ListPropertiesInput) => {
 
   return prisma.property.findMany({
     where,
+    include: {
+      rooms: true,
+    },
   });
 };
-

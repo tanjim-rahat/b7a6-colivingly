@@ -23,6 +23,7 @@ model User {
 
 
   properties   Property[]
+  applications Application[]
 
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -48,4 +49,24 @@ model Room {
   property    Property @relation(fields: [propertyId], references: [id])
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  applications Application[]
+}
+
+enum ApplicationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model Application {
+  id        String       @id @default(uuid())
+  tenantId  String
+  tenant    User         @relation(fields: [tenantId], references: [id])
+  roomId    String
+  room      Room         @relation(fields: [roomId], references: [id])
+  status    ApplicationStatus @default(PENDING)
+  message   String?
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
 }
