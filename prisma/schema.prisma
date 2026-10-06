@@ -14,7 +14,7 @@ enum Role {
 }
 
 model User {
-  id           Int      @id @default(autoincrement())
+  id           String   @id @default(uuid())
   email        String   @unique
   password     String?
   name         String?
@@ -29,22 +29,22 @@ model User {
 }
 
 model Property {
-  id          Int      @id @default(autoincrement())
+  id          String   @id @default(uuid())
   name        String
   description String?
   address     String
   rooms       Room[]
-  ownerId     Int
+  ownerId     String
   owner       User     @relation(fields: [ownerId], references: [id])
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
 
 model Room {
-  id          Int      @id @default(autoincrement())
+  id          String   @id @default(uuid())
   name        String
   description String?
-  propertyId  Int
+  propertyId  String
   property    Property @relation(fields: [propertyId], references: [id])
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt

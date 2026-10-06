@@ -3,7 +3,7 @@ import { verifyAccessToken } from "../lib/jwt.js";
 import config from "../config/index.js";
 
 export interface AuthRequest extends Request {
-  user?: { userId: number; email: string; role: string };
+  user?: { userId: string; email: string; role: string };
 }
 
 export const getCookieName = () => config.COOKIE_NAME;
@@ -29,7 +29,11 @@ export const extractAccessToken = (req: AuthRequest): string | null => {
   return null;
 };
 
-export const authenticate = (req: AuthRequest, res: Response, next: NextFunction) => {
+export const authenticate = (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     const token = extractAccessToken(req);
 
@@ -53,7 +57,11 @@ export const authenticate = (req: AuthRequest, res: Response, next: NextFunction
       return;
     }
 
-    req.user = { userId: payload.userId, email: payload.email, role: payload.role };
+    req.user = {
+      userId: payload.userId,
+      email: payload.email,
+      role: payload.role,
+    };
     next();
   } catch (error) {
     console.error("Auth middleware error:", error);
