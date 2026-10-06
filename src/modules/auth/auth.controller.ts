@@ -8,31 +8,29 @@ import {
 } from "./auth.services.js";
 import { AuthRequest } from "../../middleware/auth.middleware.js";
 import config from "../../config/index.js";
+import { signupSchema, loginSchema, refreshSchema } from "./auth.validation.js";
+
+type ZodError = {
+  issues?: Array<{ path?: (string | number)[]; message: string }>;
+};
+
+const handleZodError = (res: Response, err: ZodError) => {
+  const messages = err.issues
+    ?.map((issue) => `${(issue.path?.join(".") ?? "body")}: ${issue.message}`)
+    .join("; ");
+  res.status(400).json({
+    success: false,
+    error: "Validation error",
+    message: messages ?? "Invalid request data",
+  });
+};
 
 export const signupController = async (req: Request, res: Response) => {
   try {
-    const { email, name, role, password } = req.body;
+    const { body: input } = signupSchema.parse({ body: req.body });
+    const user = await signupService(input);
 
-    if (!email) {
-      res.status(400).json({
-        success: false,
-        error: "Email is required",
-        message: "Please provide an email address.",
-      });
-      return;
-    }
-
-    if (!password) {
-      res.status(400).json({
-        success: false,
-        error: "Password is required",
-        message: "Please provide a password.",
-      });
-      return;
-    }
-
-    const user = await signupService({ email, name, role, password });
-
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password: _password, ...userWithoutPassword } = user as Record<string, unknown> & {
       password?: string;
     };
@@ -43,12 +41,12 @@ export const signupController = async (req: Request, res: Response) => {
       data: { user: userWithoutPassword },
     });
   } catch (error) {
-    if (
-      typeof error === "object" &&
-      error !== null &&
-      "code" in error &&
-      (error as { code: string }).code === "P2002"
-    ) {
+    if ((error as ZodError)?.issues) {
+      handleZodError(res, error as ZodError);
+      return;
+    }
+
+    if ((error as { code?: string })?.code === "P2002") {
       res.status(409).json({
         success: false,
         error: "Email already registered",
@@ -58,7 +56,6 @@ export const signupController = async (req: Request, res: Response) => {
     }
 
     console.error("Error in signupController:", error);
-
     res.status(500).json({
       success: false,
       error: "Internal server error",
@@ -69,18 +66,8 @@ export const signupController = async (req: Request, res: Response) => {
 
 export const loginController = async (req: Request, res: Response) => {
   try {
-    const { email, password } = req.body;
-
-    if (!email || !password) {
-      res.status(400).json({
-        success: false,
-        error: "Email and password are required",
-        message: "Please provide both email and password.",
-      });
-      return;
-    }
-
-    const result = await loginService({ email, password });
+    const { body: input } = loginSchema.parse({ body: req.body });
+    const result = await loginService(input);
 
     // Set access token as HTTP-only cookie
     res.cookie(config.COOKIE_NAME, result.accessToken, {
@@ -96,12 +83,12 @@ export const loginController = async (req: Request, res: Response) => {
       data: result,
     });
   } catch (error) {
-    if (
-      typeof error === "object" &&
-      error !== null &&
-      "code" in error &&
-      (error as { code: string }).code === "INVALID_CREDENTIALS"
-    ) {
+    if ((error as ZodError)?.issues) {
+      handleZodError(res, error as ZodError);
+      return;
+    }
+
+    if ((error as { code?: string })?.code === "INVALID_CREDENTIALS") {
       res.status(401).json({
         success: false,
         error: "Invalid credentials",
@@ -111,7 +98,6 @@ export const loginController = async (req: Request, res: Response) => {
     }
 
     console.error("Error in loginController:", error);
-
     res.status(500).json({
       success: false,
       error: "Internal server error",
@@ -122,18 +108,8 @@ export const loginController = async (req: Request, res: Response) => {
 
 export const refreshController = async (req: Request, res: Response) => {
   try {
-    const { refreshToken } = req.body;
-
-    if (!refreshToken) {
-      res.status(400).json({
-        success: false,
-        error: "Refresh token is required",
-        message: "Please provide a refresh token.",
-      });
-      return;
-    }
-
-    const result = await refreshTokenService({ refreshToken });
+    const { body: input } = refreshSchema.parse({ body: req.body });
+    const result = await refreshTokenService(input);
 
     // Update access token cookie with new token
     res.cookie(config.COOKIE_NAME, result.accessToken, {
@@ -149,12 +125,12 @@ export const refreshController = async (req: Request, res: Response) => {
       data: result,
     });
   } catch (error) {
-    if (
-      typeof error === "object" &&
-      error !== null &&
-      "code" in error &&
-      (error as { code: string }).code === "INVALID_REFRESH_TOKEN"
-    ) {
+    if ((error as ZodError)?.issues) {
+      handleZodError(res, error as ZodError);
+      return;
+    }
+
+    if ((error as { code?: string })?.code === "INVALID_REFRESH_TOKEN") {
       res.status(401).json({
         success: false,
         error: "Invalid or expired refresh token",
@@ -164,7 +140,6 @@ export const refreshController = async (req: Request, res: Response) => {
     }
 
     console.error("Error in refreshController:", error);
-
     res.status(500).json({
       success: false,
       error: "Internal server error",
@@ -195,7 +170,6 @@ export const logoutController = async (req: AuthRequest, res: Response) => {
     });
   } catch (error) {
     console.error("Error in logoutController:", error);
-
     res.status(500).json({
       success: false,
       error: "Internal server error",
@@ -223,12 +197,7 @@ export const whoamiController = async (req: AuthRequest, res: Response) => {
       data: { user },
     });
   } catch (error) {
-    if (
-      typeof error === "object" &&
-      error !== null &&
-      "code" in error &&
-      (error as { code: string }).code === "USER_NOT_FOUND"
-    ) {
+    if ((error as { code?: string })?.code === "USER_NOT_FOUND") {
       res.status(404).json({
         success: false,
         error: "User not found",
@@ -238,7 +207,6 @@ export const whoamiController = async (req: AuthRequest, res: Response) => {
     }
 
     console.error("Error in whoamiController:", error);
-
     res.status(500).json({
       success: false,
       error: "Internal server error",

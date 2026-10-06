@@ -20,6 +20,32 @@ model User {
   name         String?
   role         Role     @default(TENANT)
   refreshToken String?
+
+
+  properties   Property[]
+
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
-} 
+}
+
+model Property {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?
+  address     String
+  rooms       Room[]
+  ownerId     Int
+  owner       User     @relation(fields: [ownerId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Room {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?
+  propertyId  Int
+  property    Property @relation(fields: [propertyId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
