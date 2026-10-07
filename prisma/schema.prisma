@@ -13,6 +13,11 @@ enum Role {
   TENANT
 }
 
+enum UserStatus {
+  ACTIVE
+  SUSPEND
+}
+
 enum PaymentStatus {
   PENDING
   SUCCEEDED
@@ -26,6 +31,7 @@ model User {
   password         String?
   name             String?
   role             Role          @default(TENANT)
+  status           UserStatus    @default(ACTIVE)
   refreshToken     String?
   stripeCustomerId String?       @unique
 

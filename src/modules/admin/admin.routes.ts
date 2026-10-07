@@ -13,4 +13,11 @@ router.get(
   adminController.listUsersController,
 );
 
+router.patch(
+  "/users/:id/status",
+  authenticate,
+  authorize(Role.ADMIN),
+  adminController.updateUserStatusController,
+);
+
 export default router;

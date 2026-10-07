@@ -74,6 +74,9 @@ export const getApplication = async (
     include: {
       tenant: { select: { id: true, email: true, name: true } },
       room: { include: { property: true } },
+      invoice: {
+        select: { id: true, amount: true, dueDate: true, status: true },
+      },
     },
   });
 
