@@ -33,8 +33,10 @@ export const listProperties = async (input: ListPropertiesInput) => {
   return prisma.property.findMany({
     where,
     include: {
+      media: true,
       rooms: {
         include: {
+          media: true,
           tenants: { select: { id: true, name: true, email: true } },
         },
       },
