@@ -8,6 +8,7 @@ import roomRouter from "./modules/room/room.routes.js";
 import applicationRouter from "./modules/application/application.routes.js";
 import paymentRouter from "./modules/payment/payment.routes.js";
 import invoiceRouter from "./modules/invoice/invoice.routes.js";
+import adminRouter from "./modules/admin/admin.routes.js";
 
 const router = express.Router();
 
@@ -28,5 +29,8 @@ router.use("/payment", express.json(), paymentRouter);
 
 // Mount the invoice router at /invoices
 router.use("/invoices", express.json(), invoiceRouter);
+
+// Mount the admin router at /admin
+router.use("/admin", express.json(), adminRouter);
 
 export default router;
