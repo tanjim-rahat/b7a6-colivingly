@@ -117,6 +117,7 @@ enum MediaType {
 model Media {
   id         String    @id @default(uuid())
   url        String
+  publicId   String?
   type       MediaType @default(IMAGE)
   propertyId String?
   property   Property? @relation(fields: [propertyId], references: [id])

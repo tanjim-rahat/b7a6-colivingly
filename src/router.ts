@@ -9,6 +9,7 @@ import applicationRouter from "./modules/application/application.routes.js";
 import paymentRouter from "./modules/payment/payment.routes.js";
 import invoiceRouter from "./modules/invoice/invoice.routes.js";
 import adminRouter from "./modules/admin/admin.routes.js";
+import mediaRouter from "./modules/media/media.routes.js";
 
 const router = express.Router();
 
@@ -32,5 +33,8 @@ router.use("/invoices", express.json(), invoiceRouter);
 
 // Mount the admin router at /admin
 router.use("/admin", express.json(), adminRouter);
+
+// Mount the media router at /media (multipart/form-data, no JSON parser)
+router.use("/media", mediaRouter);
 
 export default router;
