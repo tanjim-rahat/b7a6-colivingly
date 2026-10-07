@@ -50,6 +50,7 @@ model Property {
   description String?
   address     String
   rooms       Room[]
+  media       Media[]
   ownerId     String
   owner       User     @relation(fields: [ownerId], references: [id])
   createdAt   DateTime @default(now())
@@ -71,6 +72,7 @@ model Room {
 
   applications Application[]
   tenants     User[]    @relation("TenantRoom")
+  media       Media[]
 }
 
 enum ApplicationStatus {
@@ -105,4 +107,21 @@ model Invoice {
   stripePaymentIntentId String?       @unique
   createdAt             DateTime      @default(now())
   updatedAt             DateTime      @updatedAt
+}
+
+enum MediaType {
+  IMAGE
+  VIDEO
+}
+
+model Media {
+  id         String    @id @default(uuid())
+  url        String
+  type       MediaType @default(IMAGE)
+  propertyId String?
+  property   Property? @relation(fields: [propertyId], references: [id])
+  roomId     String?
+  room       Room?     @relation(fields: [roomId], references: [id])
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
 }
