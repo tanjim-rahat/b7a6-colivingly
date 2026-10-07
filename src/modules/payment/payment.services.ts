@@ -58,6 +58,7 @@ export const createCheckoutSession = async ({
       },
     ],
     metadata: { invoiceId, tenantId },
+    payment_intent_data: { metadata: { invoiceId, tenantId } },
     success_url: `${config.SERVER_URL ?? "http://localhost:3000"}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${config.SERVER_URL ?? "http://localhost:3000"}/payment/cancel`,
   });
@@ -65,118 +66,69 @@ export const createCheckoutSession = async ({
   return session;
 };
 
-export const handleWebhookEvent = async (
-  payload: string,
+export const handleWebhookEvent = (
+  payload: Buffer,
   signature: string,
-): Promise<{ eventType: string; data: unknown }> => {
-  const event = stripe.webhooks.constructEvent(
+): Stripe.Event =>
+  stripe.webhooks.constructEvent(
     payload,
     signature,
     config.STRIPE_WEBHOOK_SECRET!,
   );
 
-  return { eventType: event.type, data: event.data.object };
-};
-
 export const updateInvoiceFromWebhook = async (
   paymentIntentId: string,
   status: string,
+  checkoutInvoiceId?: string,
 ) => {
-  const invoice = await prisma.invoice.findFirst({
+  let invoice = await prisma.invoice.findUnique({
     where: { stripePaymentIntentId: paymentIntentId },
     include: { application: { include: { room: true } } },
   });
 
-  if (invoice) {
-    const prismaStatus =
-      status === "succeeded"
-        ? PaymentStatus.SUCCEEDED
-        : status === "failed"
-          ? PaymentStatus.FAILED
-          : invoice.status;
+  if (!invoice) {
+    const invoiceId =
+      checkoutInvoiceId ??
+      (await stripe.paymentIntents.retrieve(paymentIntentId)).metadata
+        ?.invoiceId;
+    if (!invoiceId) return null;
 
-    const updateData: any = {
-      status: prismaStatus,
-      ...(status === "succeeded"
-        ? { stripePaymentIntentId: paymentIntentId }
-        : {}),
-    };
-
-    if (status === "succeeded" && invoice.applicationId) {
-      updateData._addTenantToRoom = true;
-    }
-
-    return prisma.$transaction(async (tx) => {
-      const updated = await tx.invoice.update({
-        where: { id: invoice.id },
-        data: updateData,
-        include: { application: { include: { room: true } } },
-      });
-
-      if (updateData._addTenantToRoom && updated.application) {
-        const room = updated.application.room;
-        const existingMember = await tx.room.findFirst({
-          where: { id: room.id, tenants: { some: { id: invoice.tenantId } } },
-        });
-
-        if (!existingMember) {
-          await tx.room.update({
-            where: { id: room.id },
-            data: { tenants: { connect: { id: invoice.tenantId } } },
-          });
-        }
-      }
-
-      return updated;
+    invoice = await prisma.invoice.findUnique({
+      where: { id: invoiceId },
+      include: { application: { include: { room: true } } },
     });
   }
-
-  // Fallback: find invoice via PaymentIntent metadata
-  const pi = await stripe.paymentIntents.retrieve(paymentIntentId);
-  const invoiceId = pi.metadata?.invoiceId;
-  if (!invoiceId) return null;
-
-  const targetInvoice = await prisma.invoice.findUnique({
-    where: { id: invoiceId },
-    include: { application: { include: { room: true } } },
-  });
-  if (!targetInvoice) return null;
+  if (!invoice) return null;
 
   const prismaStatus =
     status === "succeeded"
       ? PaymentStatus.SUCCEEDED
       : status === "failed"
         ? PaymentStatus.FAILED
-        : targetInvoice.status;
-
-  const updateData: any = {
-    status: prismaStatus,
-    ...(status === "succeeded"
-      ? { stripePaymentIntentId: paymentIntentId }
-      : {}),
-  };
-
-  if (status === "succeeded" && targetInvoice.applicationId) {
-    updateData._addTenantToRoom = true;
-  }
+        : invoice.status;
 
   return prisma.$transaction(async (tx) => {
     const updated = await tx.invoice.update({
-      where: { id: invoiceId },
-      data: updateData,
+      where: { id: invoice.id },
+      data: {
+        status: prismaStatus,
+        ...(status === "succeeded"
+          ? { stripePaymentIntentId: paymentIntentId }
+          : {}),
+      },
       include: { application: { include: { room: true } } },
     });
 
-    if (updateData._addTenantToRoom && updated.application) {
+    if (status === "succeeded" && updated.application) {
       const room = updated.application.room;
       const existingMember = await tx.room.findFirst({
-        where: { id: room.id, tenants: { some: { id: updated.tenantId } } },
+        where: { id: room.id, tenants: { some: { id: invoice.tenantId } } },
       });
 
       if (!existingMember) {
         await tx.room.update({
           where: { id: room.id },
-          data: { tenants: { connect: { id: updated.tenantId } } },
+          data: { tenants: { connect: { id: invoice.tenantId } } },
         });
       }
     }

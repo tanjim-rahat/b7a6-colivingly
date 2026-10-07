@@ -1,4 +1,4 @@
-import express, { Request } from "express";
+import express from "express";
 import { authenticate } from "../../middleware/auth.middleware.js";
 import { authorize } from "../../middleware/role.middleware.js";
 import { Role } from "../../../generated/prisma/client.js";
@@ -8,6 +8,7 @@ const router = express.Router();
 
 router.post(
   "/checkout",
+  express.json(),
   authenticate,
   authorize(Role.TENANT),
   paymentController.createCheckoutSessionController,

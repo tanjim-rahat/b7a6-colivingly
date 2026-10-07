@@ -25,7 +25,7 @@ router.use("/rooms", express.json(), roomRouter);
 router.use("/applications", express.json(), applicationRouter);
 
 // Mount the payment router at /payment
-router.use("/payment", express.json(), paymentRouter);
+router.use("/payment", paymentRouter);
 
 // Mount the invoice router at /invoices
 router.use("/invoices", express.json(), invoiceRouter);
