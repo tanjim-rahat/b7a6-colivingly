@@ -1,4 +1,4 @@
-import { Response } from "express";
+import { Request, Response } from "express";
 import { AuthRequest } from "../../middleware/auth.middleware.js";
 import {
   createPropertySchema,
@@ -76,6 +76,28 @@ export const listPropertiesController = async (
     }
 
     console.error("Error listing properties:", error);
+    res.status(500).json({
+      success: false,
+      error: "Internal server error",
+      message: "An unexpected error occurred.",
+    });
+  }
+};
+
+export const listPublicPropertiesController = async (
+  _req: Request,
+  res: Response,
+) => {
+  try {
+    const properties = await listProperties({});
+
+    res.status(200).json({
+      success: true,
+      message: "Properties retrieved successfully",
+      data: { properties },
+    });
+  } catch (error) {
+    console.error("Error listing public properties:", error);
     res.status(500).json({
       success: false,
       error: "Internal server error",

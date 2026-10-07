@@ -34,7 +34,7 @@ export const listProperties = async (input: ListPropertiesInput) => {
     include: {
       rooms: {
         include: {
-          tenants: true,
+          tenants: { select: { id: true, name: true, email: true } },
         },
       },
     },
