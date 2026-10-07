@@ -4,7 +4,7 @@ import {
   createPropertySchema,
   listPropertiesSchema,
 } from "./property.validations.js";
-import { createProperty, listProperties, countProperties, countTenants } from "./property.services.js";
+import { createProperty, listProperties, getProperty, countProperties, countTenants } from "./property.services.js";
 
 type ZodError = {
   issues?: Array<{ path?: (string | number)[]; message: string }>;
@@ -102,6 +102,30 @@ export const listPublicPropertiesController = async (
       success: false,
       error: "Internal server error",
       message: "An unexpected error occurred.",
+    });
+  }
+};
+
+export const getPropertyController = async (
+  req: AuthRequest,
+  res: Response,
+) => {
+  try {
+    const property = await getProperty(req.params.id as string);
+
+    res.status(200).json({
+      success: true,
+      message: "Property retrieved successfully",
+      data: { property },
+    });
+  } catch (error) {
+    const message = (error as Error).message ?? "An unexpected error occurred.";
+    const status = message.includes("not found") ? 404 : 500;
+
+    res.status(status).json({
+      success: false,
+      error: "Failed to get property",
+      message,
     });
   }
 };

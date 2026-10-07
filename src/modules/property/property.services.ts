@@ -44,6 +44,27 @@ export const listProperties = async (input: ListPropertiesInput) => {
   });
 };
 
+export const getProperty = async (propertyId: string) => {
+  const property = await prisma.property.findUnique({
+    where: { id: propertyId },
+    include: {
+      media: true,
+      rooms: {
+        include: {
+          media: true,
+          tenants: { select: { id: true, name: true, email: true } },
+        },
+      },
+    },
+  });
+
+  if (!property) {
+    throw new Error("Property not found");
+  }
+
+  return property;
+};
+
 export const countProperties = (providerId: string) =>
   prisma.property.count({ where: { ownerId: providerId } });
 

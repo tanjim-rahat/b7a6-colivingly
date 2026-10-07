@@ -32,4 +32,10 @@ router.get(
   propertyController.countTenantsController,
 );
 
+router.get(
+  "/:id",
+  authenticate,
+  propertyController.getPropertyController,
+);
+
 export default router;
