@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "build": "tsup src/server.ts --format esm --clean",
-    "start": "node dist/server.js"
+    "start": "node dist/server.js",
+    "swagger": "tsx swagger.ts"
   },
   "keywords": [
     "colivingly",
@@ -30,6 +31,7 @@
     "@types/stripe": "^8.0.416",
     "prettier": "3.9.9",
     "prisma": "^7.10.0",
+    "swagger-autogen": "^2.23.7",
     "tsup": "^8.5.1",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2"
