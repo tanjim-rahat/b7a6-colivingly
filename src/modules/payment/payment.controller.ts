@@ -1,7 +1,10 @@
 import { Response, Request } from "express";
 import { AuthRequest } from "../../middleware/auth.middleware.js";
 import { createCheckoutSessionSchema } from "./payment.validations.js";
-import { createCheckoutSession, updateInvoiceFromWebhook } from "./payment.services.js";
+import {
+  createCheckoutSession,
+  updateInvoiceFromWebhook,
+} from "./payment.services.js";
 import Stripe from "stripe";
 
 type ZodError = {
@@ -24,7 +27,9 @@ export const createCheckoutSessionController = async (
   res: Response,
 ) => {
   try {
-    const { body: input } = createCheckoutSessionSchema.parse({ body: req.body });
+    const { body: input } = createCheckoutSessionSchema.parse({
+      body: req.body,
+    });
 
     const session = await createCheckoutSession({
       tenantId: req.user!.userId,
@@ -42,8 +47,13 @@ export const createCheckoutSessionController = async (
       return;
     }
 
+    console.log("Error creating checkout session:", error);
+
     const message = (error as Error).message ?? "An unexpected error occurred.";
-    const status = message.includes("not found") || message.includes("Unauthorized") ? 404 : 500;
+    const status =
+      message.includes("not found") || message.includes("Unauthorized")
+        ? 404
+        : 500;
 
     res.status(status).json({
       success: false,
