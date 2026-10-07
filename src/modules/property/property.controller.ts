@@ -4,7 +4,7 @@ import {
   createPropertySchema,
   listPropertiesSchema,
 } from "./property.validations.js";
-import { createProperty, listProperties } from "./property.services.js";
+import { createProperty, listProperties, countProperties, countTenants } from "./property.services.js";
 
 type ZodError = {
   issues?: Array<{ path?: (string | number)[]; message: string }>;
@@ -98,6 +98,50 @@ export const listPublicPropertiesController = async (
     });
   } catch (error) {
     console.error("Error listing public properties:", error);
+    res.status(500).json({
+      success: false,
+      error: "Internal server error",
+      message: "An unexpected error occurred.",
+    });
+  }
+};
+
+export const countPropertiesController = async (
+  req: AuthRequest,
+  res: Response,
+) => {
+  try {
+    const count = await countProperties(req.user!.userId);
+
+    res.status(200).json({
+      success: true,
+      message: "Property count retrieved successfully",
+      data: { count },
+    });
+  } catch (error) {
+    console.error("Error counting properties:", error);
+    res.status(500).json({
+      success: false,
+      error: "Internal server error",
+      message: "An unexpected error occurred.",
+    });
+  }
+};
+
+export const countTenantsController = async (
+  req: AuthRequest,
+  res: Response,
+) => {
+  try {
+    const count = await countTenants(req.user!.userId);
+
+    res.status(200).json({
+      success: true,
+      message: "Tenant count retrieved successfully",
+      data: { count },
+    });
+  } catch (error) {
+    console.error("Error counting tenants:", error);
     res.status(500).json({
       success: false,
       error: "Internal server error",

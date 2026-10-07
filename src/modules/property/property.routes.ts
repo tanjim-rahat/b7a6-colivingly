@@ -18,4 +18,18 @@ router.post(
 
 router.get("/", authenticate, propertyController.listPropertiesController);
 
+router.get(
+  "/count",
+  authenticate,
+  authorize(Role.PROVIDER),
+  propertyController.countPropertiesController,
+);
+
+router.get(
+  "/tenants/count",
+  authenticate,
+  authorize(Role.PROVIDER),
+  propertyController.countTenantsController,
+);
+
 export default router;

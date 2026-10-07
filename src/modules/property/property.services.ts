@@ -1,4 +1,5 @@
 import { prisma } from "../../lib/prisma.js";
+import { Role } from "../../../generated/prisma/enums.js";
 
 export interface CreatePropertyInput {
   name: string;
@@ -40,3 +41,14 @@ export const listProperties = async (input: ListPropertiesInput) => {
     },
   });
 };
+
+export const countProperties = (providerId: string) =>
+  prisma.property.count({ where: { ownerId: providerId } });
+
+export const countTenants = (providerId: string) =>
+  prisma.user.count({
+    where: {
+      role: Role.TENANT,
+      rooms: { some: { property: { ownerId: providerId } } },
+    },
+  });
