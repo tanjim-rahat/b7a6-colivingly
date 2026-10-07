@@ -1,13 +1,23 @@
 {
   "name": "b7a6-colivingly",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "A simple house rental app built with Node.js and TypeScript",
+  "main": "dist/server.js",
   "scripts": {
-    "dev": "tsx watch src/server.ts"
+    "dev": "tsx watch src/server.ts",
+    "build": "tsup src/server.ts --format esm --clean",
+    "start": "node dist/server.js"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "colivingly",
+    "nlw",
+    "nodejs",
+    "typescript",
+    "prisma",
+    "express",
+    "postgresql"
+  ],
+  "author": "Tanjim Rahat",
   "license": "ISC",
   "type": "module",
   "devDependencies": {
@@ -20,6 +30,7 @@
     "@types/stripe": "^8.0.416",
     "prettier": "3.9.9",
     "prisma": "^7.10.0",
+    "tsup": "^8.5.1",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2"
   },

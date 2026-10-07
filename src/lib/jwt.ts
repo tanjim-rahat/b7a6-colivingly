@@ -33,7 +33,7 @@ const verifyToken = <T = JwtPayload>(
   }
 };
 
-export const generateTokens = (userId: number, email: string, role: string) => {
+export const generateTokens = (userId: string, email: string, role: string) => {
   const accessToken = signToken(
     { userId, email, role },
     config.ACCESS_TOKEN_SECRET!,

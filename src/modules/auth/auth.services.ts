@@ -34,7 +34,7 @@ export interface LoginInput {
 
 export interface LoginResult {
   user: {
-    id: number;
+    id: string;
     email: string;
     name: string | null;
     role: string;
@@ -140,7 +140,7 @@ export const refreshTokenService = async (
 
 export type LogoutServiceResult = { success: true; message: string };
 
-export const logoutService = async (userId: number): Promise<LogoutServiceResult> => {
+export const logoutService = async (userId: string): Promise<LogoutServiceResult> => {
   await prisma.user.update({
     where: { id: userId },
     data: { refreshToken: null },
@@ -150,7 +150,7 @@ export const logoutService = async (userId: number): Promise<LogoutServiceResult
 };
 
 export type WhoamiResult = {
-  id: number;
+  id: string;
   email: string;
   name: string | null;
   role: string;
@@ -158,7 +158,7 @@ export type WhoamiResult = {
   updatedAt: Date;
 };
 
-export const whoAmIService = async (userId: number): Promise<WhoamiResult> => {
+export const whoAmIService = async (userId: string): Promise<WhoamiResult> => {
   const user = await prisma.user.findUnique({
     where: { id: userId },
     select: { id: true, email: true, name: true, role: true, createdAt: true, updatedAt: true },
