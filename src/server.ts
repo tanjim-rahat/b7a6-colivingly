@@ -1,6 +1,7 @@
 import Express, { Request, Response } from "express";
 import router from "./router.js";
 import cookieParser from "cookie-parser";
+import { readSuccessPage } from "./modules/payment/payment.utils.js";
 
 const app = Express();
 
@@ -9,8 +10,12 @@ app.use(cookieParser());
 
 app.use("/api", router);
 
+app.get("/payment/success", (_req: Request, res: Response) => {
+  res.send(readSuccessPage());
+});
+
 app.get("/", (req: Request, res: Response) => {
-  res.send("Hello, World!");
+  res.send("Welcome to colively API");
 });
 
 const PORT = process.env.PORT || 3000;
